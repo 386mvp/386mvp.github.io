@@ -79,17 +79,18 @@ function pose(R,u){const r=R.pts[0],s=r[0]<0?-1:1,m=L=='13U'?54:60.5;// s: arm s
  const elb=lerp(sh,hand,0.5).map((v,j)=>j==2?v+0.3:v);
  return{head,sh,sh2,hip,hand,glove,elb,back,bk,front,fk}}
 const PSC=2.2; // pitcher drawn 2.2x for visibility, scaled about his real release point so the ball still leaves from it
-function pitcher(c,R,u){const P=pose(R,u),o=pj(c,R.pts[0]),q=p=>{const s=pj(c,p);return[o[0]+(s[0]-o[0])*PSC,o[1]+(s[1]-o[1])*PSC,s[2]*PSC]};
- {const mm=q([0,(L=='13U'?54:60.5)-1,0]);cx.fillStyle='#5a4a3a';cx.beginPath();cx.ellipse(mm[0],mm[1],W*.07*PSC*.8,8*PSC*.8,0,0,7);cx.fill()}cx.strokeStyle='#ECE7E1';const a1=q(P.hip),a2=q(add(P.hip,[0,0,1])),ppf=Math.hypot(a1[0]-a2[0],a1[1]-a2[1]);cx.lineWidth=Math.max(2,ppf*0.28);cx.lineCap='round';
+function ball(x,y,r){cx.save();cx.shadowColor='rgba(255,255,255,.55)';cx.shadowBlur=Math.max(6,r*2);cx.fillStyle='#fff';cx.beginPath();cx.arc(x,y,r,0,7);cx.fill();cx.restore();cx.lineWidth=1.5;cx.strokeStyle='#000';cx.beginPath();cx.arc(x,y,r+0.75,0,7);cx.stroke()}
+function pitcher(c,R,u,t=0){const P=pose(R,u),o=pj(c,R.pts[0]),q=p=>{const s=pj(c,p);return[o[0]+(s[0]-o[0])*PSC,o[1]+(s[1]-o[1])*PSC,s[2]*PSC]};
+ {const mm=q([0,(L=='13U'?54:60.5)-1,0]);cx.fillStyle='#5a4a3a';cx.beginPath();cx.ellipse(mm[0],mm[1],W*.07*PSC*.8,8*PSC*.8,0,0,7);cx.fill()}cx.save();cx.globalAlpha=u<1?0.6:Math.max(0.18,0.6-t*2.5);cx.strokeStyle='#8a7a68';const a1=q(P.hip),a2=q(add(P.hip,[0,0,1])),ppf=Math.hypot(a1[0]-a2[0],a1[1]-a2[1]);cx.lineWidth=Math.max(2,ppf*0.28);cx.lineCap='round';
  const ln=(...ps)=>{cx.beginPath();ps.forEach((p,k)=>{const s=q(p);k?cx.lineTo(s[0],s[1]):cx.moveTo(s[0],s[1])});cx.stroke()};
  ln(P.back,P.bk,P.hip,P.fk,P.front);ln(P.hip,P.sh);ln(P.sh2,P.sh,P.elb,P.hand);ln(P.sh2,P.glove);
- const h=q(P.head),rr=Math.max(3,ppf*0.36);cx.fillStyle='#ECE7E1';cx.beginPath();cx.arc(h[0],h[1],rr,0,7);cx.fill();
- const g=q(P.glove);cx.fillStyle='#8a6a4a';cx.beginPath();cx.arc(g[0],g[1],Math.max(2,ppf*0.3),0,7);cx.fill();
- if(u<1){const s=q(P.hand);cx.fillStyle='#fff';cx.beginPath();cx.arc(s[0],s[1],Math.max(2.5,ppf*0.2),0,7);cx.fill()}}
-function draw(R,t,trail,u=1){const c=cam('R');scene(c);pitcher(c,R,u);if(u<1)return;
+ const h=q(P.head),rr=Math.max(3,ppf*0.36);cx.fillStyle='#8a7a68';cx.beginPath();cx.arc(h[0],h[1],rr,0,7);cx.fill();
+ const g=q(P.glove);cx.fillStyle='#6e5e4e';cx.beginPath();cx.arc(g[0],g[1],Math.max(2,ppf*0.3),0,7);cx.fill();
+ cx.restore();if(u<1){const s=q(P.hand);ball(s[0],s[1],Math.max(2.5,ppf*0.2))}}
+function draw(R,t,trail,u=1){const c=cam('R');scene(c);pitcher(c,R,u,t);if(u<1)return;
  if(trail){cx.strokeStyle='#ff6a00';cx.lineWidth=3;cx.beginPath();for(let s=0;s<=t+1e-9;s+=1/120){const p=pj(c,at(R,Math.min(s,t)));s?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1])}cx.stroke();
   const d=pj(c,at(R,R.tDec));cx.strokeStyle='#ECE7E1';cx.lineWidth=2;cx.beginPath();cx.arc(d[0],d[1],7,0,7);cx.stroke();cx.fillStyle='#ECE7E1';cx.font='14px system-ui';cx.fillText('decision point',d[0]+10,d[1]-8)}
- const s=pj(c,at(R,t));cx.fillStyle='#fff';cx.beginPath();cx.arc(s[0],s[1],s[2],0,7);cx.fill()}
+ const s=pj(c,at(R,t));ball(s[0],s[1],s[2])}
 function fly(R,t0,t1,trail,done){cancelAnimationFrame(raf);const st=performance.now();const step=now=>{const t=Math.min(t0+(now-st)/1000,t1);R.tShow=t;R.uShow=1;draw(R,t,trail);if(t>=t1){done&&done();return}raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step)}
 function deliver(R,done){cancelAnimationFrame(raf);const st=performance.now();const step=now=>{const u=Math.min((now-st)/1000/DUR,1);R.uShow=u;R.tShow=0;draw(R,0,false,u);if(u>=1){done();return}raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step)}
 function pickDecoy(R){const o=R.opts.map(x=>x[0]).filter(x=>x!=R.pt);if(o.length==1)return o[0];
