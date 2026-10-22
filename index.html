@@ -24,25 +24,25 @@ ul{padding-left:20px;line-height:1.5;margin:8px 0}
 .zone.off{pointer-events:none}.zone.off span{opacity:.35}.zone.ok span{background:#1e4d2bdd;border-color:#2e9e4f;opacity:1}.zone.no span{background:#4d1e1edd;border-color:#c0392b;opacity:1}
 #prompt{position:absolute;left:0;right:0;top:calc(max(8px,env(safe-area-inset-top)) + 52px);text-align:center;font-size:30px;font-weight:900;color:var(--or);text-shadow:0 2px 8px #000;z-index:3;pointer-events:none}
 #rev{position:absolute;left:10px;right:10px;bottom:max(10px,env(safe-area-inset-bottom));max-width:560px;margin:0 auto;background:#1b1b1bf2;border-left:5px solid var(--or);border-radius:10px;padding:12px 14px;font-size:15px;line-height:1.45;z-index:4}
-#rev ul{margin:6px 0;padding-left:18px}@media (max-height:500px){#rev{font-size:13px;padding:8px 12px;left:auto;right:10px;width:min(460px,60%);margin:0}#rev .btn{padding:8px;font-size:17px}}#rev .btn{margin:8px 0 0;text-align:center;padding:12px}
+#go{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);z-index:6;width:min(80vw,340px);padding:26px 10px;border:4px solid var(--or);border-radius:20px;background:#1a0f06ee;color:var(--tx);font-size:30px;font-weight:900;line-height:1.1;cursor:pointer;touch-action:manipulation}#go small{display:block;font-size:14px;color:var(--mu);font-weight:600;margin-top:8px}#go:active{background:#2a1a0d}.row2{display:flex;gap:8px}.row2 .btn{flex:1}#replay{border-color:#777}#rev ul{margin:6px 0;padding-left:18px}@media (max-height:500px){#rev{font-size:13px;padding:8px 12px;left:auto;right:10px;width:min(460px,60%);margin:0}#rev .btn{padding:8px;font-size:17px}}#rev .btn{margin:8px 0 0;text-align:center;padding:12px}
 table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:6px 4px;border-bottom:1px solid #333;text-align:left}
 </style></head><body>
 <section id="start" class="scr"><div class="menu">
 <div class="brand">386 MVP · PITCH RECOGNITION</div><h1>Guess the Pitch</h1>
 <ul><li>The pitch leaves the hand and <b>freezes at your decision point</b>, the last moment you can still choose to swing.</li>
-<li>Two pitch names show up, one on the LEFT and one on the RIGHT. <b>Tap the side</b> you think it is (or use the ← → keys).</li>
+<li>Press <b>Press here to start</b>. The pitcher goes through the same delivery every pitch, so load with him.</li><li>Two pitch names show up, one on the LEFT and one on the RIGHT. <b>Tap the side</b> you think it is (or use the ← → keys).</li>
 <li>The rest of the flight plays out, then you see if you were right and the tell.</li>
 <li>10 pitches per level. Your reaction time is tracked.</li><li>Works best full screen, held either way.</li></ul>
 <button class="btn" data-lv="13U">13U<span class="best" id="b13U"></span><small>54 ft mound, slower speeds. Freezes about 200 ms before the plate (estimate).</small></button>
 <button class="btn" data-lv="HS">High School<span class="best" id="bHS"></span><small>60.5 ft, about 85% of MLB speed. Freezes 165 ms before the plate.</small></button>
 <button class="btn" data-lv="MLB">D1 / MLB<span class="best" id="bMLB"></span><small>Real 2026 MLB speeds and tunnels. Freezes 165 ms before the plate.</small></button>
-<p class="note">Pitch flight comes from each pitcher's real 2026 Statcast averages (Baseball Savant). 13U and HS versions are scaled models (estimate), not real youth pitches. Decision point: about 150–175 ms before the plate for HS, D1 and MLB, set at 165 ms here. 13U uses 200 ms, an estimate for slower bats. View is from the hitter's eyes. Tells are coaching philosophy.</p>
+<p class="note">Pitch flight comes from each pitcher's real 2026 Statcast averages (Baseball Savant). 13U and HS versions are scaled models (estimate), not real youth pitches. Decision point: about 150–175 ms before the plate for HS, D1 and MLB, set at 165 ms here. 13U uses 200 ms, an estimate for slower bats. View is from the hitter's eyes. The pitcher figure is drawn about 2x life size so you can see his delivery; the ball still leaves from his real release point. The delivery is the same length every pitch (a timing cue, not his real tempo). Tells are coaching philosophy.</p>
 </div></section>
 <section id="game" class="scr hid"><canvas id="cv"></canvas>
 <div id="hud"><span id="lvl"></span><span>Pitch <b id="rn"></b>/10</span><span>Score <b id="sc">0</b></span><button id="quit">✕</button></div>
 <div id="who"></div><div id="prompt" class="hid"></div>
 <div id="zL" class="zone off hid" data-side="L"><span></span></div><div id="zR" class="zone off hid" data-side="R"><span></span></div>
-<div id="rev" class="hid"></div></section>
+<button id="go" class="hid">PRESS HERE<br>TO START<small>Load with his delivery</small></button><div id="rev" class="hid"></div></section>
 <section id="end" class="scr hid"><div class="menu"><div class="brand">386 MVP · PITCH RECOGNITION</div><h1 id="fin"></h1><p id="rt"></p><table id="tab"></table>
 <button class="btn c" id="again">Same level again</button><button class="btn c" id="menu">Pick a level</button></div></section>
 <script>
@@ -50,41 +50,72 @@ const D={"13U":[{"pitcher":"Jacob Misiorowski","throws":"R","pt":"CU","name":"Cu
 const TELL={FF:'Stays on its line and gets on you fast. Little drop, it holds up near the top.',SI:'Fastball speed but runs to his arm side and sinks late.',FC:'Looks like a fastball, then cuts a few inches to his glove side late.',SL:'Slower than the fastball and breaks to his glove side late. Look for the tight spin dot.',ST:'Big sideways sweep to his glove side. Starts at you or the middle and keeps going.',CU:'Pops up out of the hand, then drops. The early hump is the tell.',KC:'Pops up out of the hand, then drops hard. The early hump is the tell.',CH:'Arm speed lies: looks like a fastball, arrives late and fades down to his arm side.',FS:'Looks like a fastball until late, then the bottom falls out.'};
 let L,i=0,score=0,log=[],raf=null,state='idle',cur=null,tFreeze=0,keyok=true;const $=id=>document.getElementById(id);
 const cv=$('cv'),cx=cv.getContext('2d');let W=800,H=600;
-function fit(){const r=devicePixelRatio||1;W=innerWidth;H=innerHeight;cv.width=W*r;cv.height=H*r;cx.setTransform(r,0,0,r,0,0);if(cur&&state!='idle')draw(cur,cur.tShow||0,state!="flight1")}
+function fit(){const r=devicePixelRatio||1;W=innerWidth;H=innerHeight;cv.width=W*r;cv.height=H*r;cx.setTransform(r,0,0,r,0,0);if(cur&&state!='idle')draw(cur,cur.tShow||0,['flight2','reveal'].includes(state),cur.uShow??1)}
 addEventListener('resize',fit);
-function cam(st){const e=[st=='R'?-2.9:2.9,-0.6,L=='13U'?4.3:(L=='HS'?4.8:5.0)],tg=[st=='R'?1.5:-1.5,10,1.3];let f=tg.map((v,k)=>v-e[k]);const n=Math.hypot(...f);f=f.map(v=>v/n);
+function cam(st){const e=[st=='R'?-2.9:2.9,-0.6,L=='13U'?4.3:(L=='HS'?4.8:5.0)],tg=[st=="R"?0.9:-0.9,10,1.3];let f=tg.map((v,k)=>v-e[k]);const n=Math.hypot(...f);f=f.map(v=>v/n);
  let r=[f[1],-f[0],0];const rn=Math.hypot(...r);r=r.map(v=>v/rn);const u=[r[1]*f[2]-r[2]*f[1],r[2]*f[0]-r[0]*f[2],r[0]*f[1]-r[1]*f[0]];return{e,f,r,u}}
-function pj(c,P){const d=P.map((v,k)=>v-c.e[k]);const z=Math.max(d[0]*c.f[0]+d[1]*c.f[1]+d[2]*c.f[2],.05);const F=Math.max(Math.min(W,H)*0.8,Math.min(W*.41,H*.55)),ox=W*.46,oy=H*.46;
+function pj(c,P){const d=P.map((v,k)=>v-c.e[k]);const z=Math.max(d[0]*c.f[0]+d[1]*c.f[1]+d[2]*c.f[2],.05);const pt=H>W,F=pt?W*0.95:Math.min(W,H)*0.8,ox=pt?W*.4:W*.46,oy=pt?H*.42:H*.46;
  return[ox+F*(d[0]*c.r[0]+d[1]*c.r[1]+d[2]*c.r[2])/z,oy-F*(d[0]*c.u[0]+d[1]*c.u[1]+d[2]*c.u[2])/z,Math.max(F*.121/z,4)]}
 function at(R,t){const P=R.pts,n=P.length-1,tk=k=>k<n?k/60:R.T;t=Math.max(0,Math.min(t||0,R.T));let k=Math.min(Math.floor(t*60),n-1);const a=Math.min((t-tk(k))/(tk(k+1)-tk(k)),1);return P[k].map((v,j)=>v+(P[k+1][j]-v)*a)}
 function scene(c){cx.fillStyle='#0e0e0e';cx.fillRect(0,0,W,H);const hz=pj(c,[0,2000,0])[1];cx.fillStyle='#34291f';cx.fillRect(0,hz,W,H-hz);
  const q=(x,y,z=0)=>pj(c,[x,y,z]);cx.fillStyle='#ddd';cx.beginPath();[[-.83,PL],[.83,PL],[.83,.71],[0,0],[-.83,.71]].forEach((p,k)=>{const s=q(p[0],p[1]);k?cx.lineTo(s[0],s[1]):cx.moveTo(s[0],s[1])});cx.fill();
  const zb=L=='13U'?1.3:1.55,zt=L=='13U'?2.85:3.35;cx.strokeStyle='#bbb';cx.lineWidth=2;cx.beginPath();[[-.83,zb],[.83,zb],[.83,zt],[-.83,zt],[-.83,zb]].forEach((p,k)=>{const s=q(p[0],PL,p[1]);k?cx.lineTo(s[0],s[1]):cx.moveTo(s[0],s[1])});cx.stroke();
- const m=q(0,(L=='13U'?54:60.5)-1);cx.fillStyle='#5a4a3a';cx.beginPath();cx.ellipse(m[0],m[1],W*.07,8,0,0,7);cx.fill()}
-function draw(R,t,trail){const c=cam('R');scene(c);
+}
+const DUR=1.5; // delivery length in seconds, identical every round (timing cue, not real tempo data)
+const ease=x=>x<0?0:x>1?1:x*x*(3-2*x),lerp=(a,b,k)=>a.map((v,j)=>v+(b[j]-v)*k),add=(a,b)=>a.map((v,j)=>v+b[j]);
+function pose(R,u){const r=R.pts[0],s=r[0]<0?-1:1,m=L=='13U'?54:60.5;// s: arm side x sign (from real release x)
+ const sh1=[r[0]-s*0.55,r[1]+0.9,r[2]-0.75],hip1=[sh1[0]-s*0.5,sh1[1]+0.7,sh1[2]-2.0];
+ const hip0=[s*0.4,m-0.3,3.1],sh0=add(hip0,[0,0,1.9]);
+ const st=ease((u-0.30)/0.42),hip=lerp(hip0,hip1,st),sh=lerp(sh0,sh1,ease((u-0.40)/0.6));
+ const head=add(sh,[0,(1-st)*0.05+st*-0.15,0.75]),sh2=add(sh,[-s*1.1,0.1,0]);
+ const back=[hip0[0]+s*0.2,m,0];const land=[hip1[0]-s*0.3,hip1[1]-2.2,0];
+ const lift=ease(u/0.28)*(1-ease((u-0.32)/0.2));
+ const front=ease((u-0.32)/0.38)>0?lerp(add(hip0,[-s*0.3,0,-0.6]),land,ease((u-0.32)/0.38)):add(hip0,[-s*(0.4+0.5*lift),0.3*lift,-3.1+2.6*lift]);
+ const fk=lerp(hip,front,0.5).map((v,j)=>j==2?v+1.2*lift+0.4:(j==0?v-s*0.9*lift:v)),bk=add(lerp(hip,back,0.5),[0,-0.3,0.2]);
+ let hand;const a=ease((u-0.62)/0.38);
+ if(u<0.62){hand=add(sh,[-s*0.3,0.2,-0.9*(1-ease((u-0.3)/0.3))+0.2*ease((u-0.3)/0.3)])}
+ else{const b0=add(sh,[s*0.4,0.2,-0.7]),c1=add(sh,[s*0.9,1.4,1.2]),c2=r;const k=a;hand=b0.map((v,j)=>(1-k)*(1-k)*v+2*(1-k)*k*c1[j]+k*k*c2[j])}
+ const glove=add(sh2,[-s*0.1,-1.0+0.4*a*(1-0)+ (u<0.62?0.6:0),-0.5-0.5*a]);
+ const elb=lerp(sh,hand,0.5).map((v,j)=>j==2?v+0.3:v);
+ return{head,sh,sh2,hip,hand,glove,elb,back,bk,front,fk}}
+const PSC=2.2; // pitcher drawn 2.2x for visibility, scaled about his real release point so the ball still leaves from it
+function pitcher(c,R,u){const P=pose(R,u),o=pj(c,R.pts[0]),q=p=>{const s=pj(c,p);return[o[0]+(s[0]-o[0])*PSC,o[1]+(s[1]-o[1])*PSC,s[2]*PSC]};
+ {const mm=q([0,(L=='13U'?54:60.5)-1,0]);cx.fillStyle='#5a4a3a';cx.beginPath();cx.ellipse(mm[0],mm[1],W*.07*PSC*.8,8*PSC*.8,0,0,7);cx.fill()}cx.strokeStyle='#ECE7E1';const a1=q(P.hip),a2=q(add(P.hip,[0,0,1])),ppf=Math.hypot(a1[0]-a2[0],a1[1]-a2[1]);cx.lineWidth=Math.max(2,ppf*0.28);cx.lineCap='round';
+ const ln=(...ps)=>{cx.beginPath();ps.forEach((p,k)=>{const s=q(p);k?cx.lineTo(s[0],s[1]):cx.moveTo(s[0],s[1])});cx.stroke()};
+ ln(P.back,P.bk,P.hip,P.fk,P.front);ln(P.hip,P.sh);ln(P.sh2,P.sh,P.elb,P.hand);ln(P.sh2,P.glove);
+ const h=q(P.head),rr=Math.max(3,ppf*0.36);cx.fillStyle='#ECE7E1';cx.beginPath();cx.arc(h[0],h[1],rr,0,7);cx.fill();
+ const g=q(P.glove);cx.fillStyle='#8a6a4a';cx.beginPath();cx.arc(g[0],g[1],Math.max(2,ppf*0.3),0,7);cx.fill();
+ if(u<1){const s=q(P.hand);cx.fillStyle='#fff';cx.beginPath();cx.arc(s[0],s[1],Math.max(2.5,ppf*0.2),0,7);cx.fill()}}
+function draw(R,t,trail,u=1){const c=cam('R');scene(c);pitcher(c,R,u);if(u<1)return;
  if(trail){cx.strokeStyle='#ff6a00';cx.lineWidth=3;cx.beginPath();for(let s=0;s<=t+1e-9;s+=1/120){const p=pj(c,at(R,Math.min(s,t)));s?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1])}cx.stroke();
   const d=pj(c,at(R,R.tDec));cx.strokeStyle='#ECE7E1';cx.lineWidth=2;cx.beginPath();cx.arc(d[0],d[1],7,0,7);cx.stroke();cx.fillStyle='#ECE7E1';cx.font='14px system-ui';cx.fillText('decision point',d[0]+10,d[1]-8)}
  const s=pj(c,at(R,t));cx.fillStyle='#fff';cx.beginPath();cx.arc(s[0],s[1],s[2],0,7);cx.fill()}
-function fly(R,t0,t1,trail,done){cancelAnimationFrame(raf);const st=performance.now();const step=now=>{const t=Math.min(t0+(now-st)/1000,t1);R.tShow=t;draw(R,t,trail);if(t>=t1){done&&done();return}raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step)}
+function fly(R,t0,t1,trail,done){cancelAnimationFrame(raf);const st=performance.now();const step=now=>{const t=Math.min(t0+(now-st)/1000,t1);R.tShow=t;R.uShow=1;draw(R,t,trail);if(t>=t1){done&&done();return}raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step)}
+function deliver(R,done){cancelAnimationFrame(raf);const st=performance.now();const step=now=>{const u=Math.min((now-st)/1000/DUR,1);R.uShow=u;R.tShow=0;draw(R,0,false,u);if(u>=1){done();return}raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step)}
 function pickDecoy(R){const o=R.opts.map(x=>x[0]).filter(x=>x!=R.pt);if(o.length==1)return o[0];
- // 3-pitch arsenals: decoy is his fastball when the answer is not the fastball, otherwise his other secondary listed first
  if(R.pt!='FF'&&o.includes('FF'))return 'FF';return o[Math.floor(Math.random()*o.length)]}
-function round(){const R=D[L][i];cur=R;R.tDec=Math.max(R.T-DEC[L],0.05);R.decFt=(R.pts[0][1]>0?at(R,R.tDec)[1]-PL:0);
+function round(){const R=D[L][i];cur=R;R.tDec=Math.max(R.T-DEC[L],0.05);R.decFt=at(R,R.tDec)[1]-PL;
  const dec=pickDecoy(R),nm=k=>R.opts.find(o=>o[0]==k)[1];const sides=Math.random()<.5?[R.pt,dec]:[dec,R.pt];R.sides=sides;
  $('rn').textContent=i+1;$('rev').classList.add('hid');$('prompt').classList.add('hid');
- ['zL','zR'].forEach((z,k)=>{const e=$(z);e.className='zone off';e.dataset.pt=sides[k];e.querySelector('span').innerHTML='<i>'+(k?'RIGHT →':'← LEFT')+'</i>'+nm(sides[k])});
- $('who').textContent=R.pitcher+' ('+(R.throws=='R'?'RHP':'LHP')+') · watch the ball';state='flight1';
- setTimeout(()=>fly(R,0,R.tDec,false,()=>{state='decide';tFreeze=performance.now();$('prompt').textContent='WHAT IS IT?';$('prompt').classList.remove('hid');$('zL').classList.remove('off');$('zR').classList.remove('off')}),600)}
+ ['zL','zR'].forEach((z,k)=>{const e=$(z);e.className='zone off hid';e.dataset.pt=sides[k];e.querySelector('span').innerHTML='<i>'+(k?'RIGHT →':'← LEFT')+'</i>'+nm(sides[k])});
+ $('who').textContent=R.pitcher+' ('+(R.throws=='R'?'RHP':'LHP')+')';state='ready';R.uShow=0;R.tShow=0;draw(R,0,false,0);$('go').classList.remove('hid')}
+function go(){if(state!='ready')return;const R=cur;$('go').classList.add('hid');state='delivery';$('who').textContent=R.pitcher+' ('+(R.throws=='R'?'RHP':'LHP')+') · load with him';
+ deliver(R,()=>{state='flight1';$('who').textContent=R.pitcher+' ('+(R.throws=='R'?'RHP':'LHP')+') · watch the ball';fly(R,0,R.tDec,false,()=>{state='decide';tFreeze=performance.now();$('prompt').textContent='WHAT IS IT?';$('prompt').classList.remove('hid');['zL','zR'].forEach(z=>$(z).classList.remove('off','hid'))})})}
+function revealHTML(){return cur.revHTML+'<div class="row2"><button class="btn" id="replay">↻ Replay pitch</button><button class="btn" id="next">'+(i<9?'Next pitch':'See score')+'</button></div>'}
+function showRev(){$('rev').innerHTML=revealHTML();$('rev').classList.remove('hid');$('next').onclick=next;$('replay').onclick=replay}
 function answer(side){if(state!='decide')return;state='flight2';const R=cur;const rt=Math.round(performance.now()-tFreeze);const pt=R.sides[side=='L'?0:1];const ok=pt==R.pt;if(ok)score++;$('sc').textContent=score;
  log.push({p:R.pitcher,a:R.name,g:R.opts.find(o=>o[0]==pt)[1],ok,rt});$('prompt').classList.add('hid');
  ['zL','zR'].forEach(z=>{const e=$(z);e.classList.add('off');if(e.dataset.pt==R.pt)e.classList.add('ok');else if(e.dataset.pt==pt)e.classList.add('no')});
- fly(R,R.tDec,R.T,true,()=>{state='reveal';$('zL').classList.add('hid');$('zR').classList.add('hid');
-  $('rev').innerHTML=(ok?'<b style="color:#2e9e4f">Correct.</b> ':'<b style="color:#e57373">Not quite.</b> ')+'It was a <b>'+R.name+'</b>. Reaction time <b>'+rt+' ms</b>.'+
-  '<ul><li>Tell: '+TELL[R.pt]+'</li><li>Velo '+R.mph+' mph'+(L=='MLB'?'':' (scaled estimate)')+', feels like about '+R.perc+' mph. Spin '+R.spin+' rpm (his real 2026 MLB average).</li><li>Froze '+Math.round(DEC[L]*1000)+' ms'+(L=='13U'?' (estimate)':'')+' and about '+R.decFt.toFixed(0)+' ft before the plate. The full flight takes '+Math.round(R.T*1000)+' ms.</li></ul><button class="btn" id="next">'+(i<9?'Next pitch':'See score')+'</button>';
-  $('rev').classList.remove('hid');$('next').onclick=next})}
-function next(){if(state!='reveal')return;i++;if(i<10){$('zL').classList.remove('hid');$('zR').classList.remove('hid');round()}else end()}
+ fly(R,R.tDec,R.T,true,()=>{state='reveal';['zL','zR'].forEach(z=>$(z).classList.add('hid'));
+  R.revHTML=(ok?'<b style="color:#2e9e4f">Correct.</b> ':'<b style="color:#e57373">Not quite.</b> ')+'It was a <b>'+R.name+'</b>. Reaction time <b>'+rt+' ms</b>.'+
+  '<ul><li>Tell: '+TELL[R.pt]+'</li><li>Velo '+R.mph+' mph'+(L=='MLB'?'':' (scaled estimate)')+', feels like about '+R.perc+' mph. Spin '+R.spin+' rpm (his real 2026 MLB average).</li><li>Froze '+Math.round(DEC[L]*1000)+' ms'+(L=='13U'?' (estimate)':'')+' and about '+R.decFt.toFixed(0)+' ft before the plate. The full flight takes '+Math.round(R.T*1000)+' ms.</li></ul>';showRev()})}
+let replays=0;
+function replay(){if(state!='reveal')return;const R=cur;state='replay';replays++;$('rev').classList.add('hid');$('who').textContent=R.pitcher+' · replay';
+ deliver(R,()=>fly(R,0,R.tDec,false,()=>{$('prompt').textContent='DECISION POINT';$('prompt').classList.remove('hid');setTimeout(()=>{$('prompt').classList.add('hid');fly(R,R.tDec,R.T,true,()=>{state='reveal';showRev()})},700)}))}
+function next(){if(state!='reveal')return;i++;if(i<10)round();else end()}
 ['zL','zR'].forEach(z=>$(z).addEventListener('pointerdown',e=>{e.preventDefault();answer($(z).dataset.side)}));
-addEventListener('keydown',e=>{if(e.key=='ArrowLeft')answer('L');else if(e.key=='ArrowRight')answer('R');else if((e.key=='Enter'||e.key==' ')&&state=='reveal')next()});
+addEventListener('keydown',e=>{if(e.key=='ArrowLeft')answer('L');else if(e.key=='ArrowRight')answer('R');else if(e.key=='Enter'||e.key==' '){e.preventDefault();if(state=='ready')go();else if(state=='reveal')next()}else if((e.key=='r'||e.key=='R')&&state=='reveal')replay()});
+
 function bestKey(l){return 'gtp386_best_'+l}
 function showBest(){['13U','HS','MLB'].forEach(l=>{let b=null;try{b=localStorage.getItem(bestKey(l))}catch(e){}$('b'+l).textContent=b?'Best '+b+'/10':''})}
 function end(){state='idle';$('game').classList.add('hid');$('end').classList.remove('hid');const nm=L=='MLB'?'D1 / MLB':L;$('fin').textContent=nm+': '+score+' / 10';
@@ -95,8 +126,8 @@ function end(){state='idle';$('game').classList.add('hid');$('end').classList.re
 function start(l){L=l;i=0;score=0;log=[];$('sc').textContent=0;$('lvl').textContent=L=='MLB'?'D1 / MLB':L;['start','end'].forEach(s=>$(s).classList.add('hid'));$('game').classList.remove('hid');$('zL').classList.remove('hid');$('zR').classList.remove('hid');
  const de=document.documentElement;try{if(de.requestFullscreen&&!document.fullscreenElement&&matchMedia('(pointer:coarse)').matches)de.requestFullscreen().catch(()=>{})}catch(e){}fit();round()}
 document.querySelectorAll('#start .btn').forEach(b=>b.onclick=()=>start(b.dataset.lv));
-$('again').onclick=()=>start(L);$('menu').onclick=()=>{$('end').classList.add('hid');$('start').classList.remove('hid');showBest()};
+$('go').addEventListener('click',go);$('again').onclick=()=>start(L);$('menu').onclick=()=>{$('end').classList.add('hid');$('start').classList.remove('hid');showBest()};
 $('quit').onclick=()=>{cancelAnimationFrame(raf);state='idle';$('game').classList.add('hid');$('start').classList.remove('hid');showBest()};
 showBest();
-window.__GTP={D,start,get score(){return score},get state(){return state},get cur(){return cur},get log(){return log},get i(){return i}};
+window.__GTP={D,start,get score(){return score},get state(){return state},get cur(){return cur},get log(){return log},get i(){return i},go,replay,get replays(){return replays}};
 </script></body></html>
